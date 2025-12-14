@@ -10,7 +10,7 @@ export default defineConfig({
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
     alias: {
-      // 기존 alias 목록 유지
+      // 기존 alias 목록
       'vaul@1.1.2': 'vaul',
       'sonner@2.0.3': 'sonner',
       'recharts@2.15.2': 'recharts',
@@ -41,3 +41,26 @@ export default defineConfig({
       '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
       '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
       '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
+      // 누락된 alias 목록 재추가
+      '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
+      '@radix-ui/react-context-menu@2.2.6': '@radix-ui/react-context-menu',
+      '@radix-ui/react-collapsible@1.1.3': '@radix-ui/react-collapsible',
+      '@radix-ui/react-checkbox@1.1.4': '@radix-ui/react-checkbox',
+      '@radix-ui/react-avatar@1.1.3': '@radix-ui/react-avatar',
+      '@radix-ui/react-aspect-ratio@1.1.2': '@radix-ui/react-aspect-ratio',
+      '@radix-ui/react-alert-dialog@1.1.6': '@radix-ui/react-alert-dialog',
+      '@radix-ui/react-accordion@1.2.3': '@radix-ui/react-accordion',
+      '@jsr/supabase__supabase-js@2.49.8': '@jsr/supabase__supabase-js',
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  build: {
+    target: 'esnext',
+    outDir: 'dist', // Vercel을 위해 'dist' 유지
+  },
+  server: {
+    port: 3000,
+    open: true,
+  },
+}); // <- 이 괄호가 누락되어 빌드 에러가 발생한 것입니다.
