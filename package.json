@@ -74,6 +74,6 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "rm -rf node_modules/.vite-temp && vite build"
+    "build": "NODE_PATH=./node_modules vite build"
   }
 }
