@@ -3,14 +3,15 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
 export default defineConfig({
-  // Vercel에서 CSS/JS 등 정적 에셋이 깨지는 것을 방지하기 위해 기본 경로를 루트로 명시합니다.
+  // Vercel에서 라우팅 이동 시 CSS 파일 경로 문제가 발생하지 않도록
+  // 서버 루트 기준의 절대 경로('/')를 사용하도록 명시
   base: '/',
   
   plugins: [react()],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
     alias: {
-      // 기존 alias 목록
+      // 기존 alias 목록 유지
       'vaul@1.1.2': 'vaul',
       'sonner@2.0.3': 'sonner',
       'recharts@2.15.2': 'recharts',
@@ -41,7 +42,6 @@ export default defineConfig({
       '@radix-ui/react-menubar@1.1.6': '@radix-ui/react-menubar',
       '@radix-ui/react-label@2.1.2': '@radix-ui/react-label',
       '@radix-ui/react-hover-card@1.1.6': '@radix-ui/react-hover-card',
-      // 누락된 alias 목록 재추가
       '@radix-ui/react-dropdown-menu@2.1.6': '@radix-ui/react-dropdown-menu',
       '@radix-ui/react-dialog@1.1.6': '@radix-ui/react-dialog',
       '@radix-ui/react-context-menu@2.2.6': '@radix-ui/react-context-menu',
@@ -57,10 +57,13 @@ export default defineConfig({
   },
   build: {
     target: 'esnext',
-    outDir: 'dist', // Vercel을 위해 'dist' 유지
+    // 빌드 결과물이 Vercel 기본값 'dist'에 저장되도록 명시
+    outDir: 'dist',
+    // 정적 자원(public 폴더 내용)을 명시적으로 지정
+    publicDir: 'public', 
   },
   server: {
     port: 3000,
     open: true,
   },
-}); // <- 이 괄호가 누락되어 빌드 에러가 발생한 것입니다.
+});
