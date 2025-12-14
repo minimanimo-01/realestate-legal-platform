@@ -60,7 +60,6 @@ export default defineConfig({
     // 빌드 결과물이 Vercel 기본값 'dist'에 저장되도록 명시
     outDir: 'dist',
     // 정적 자원(public 폴더 내용)을 명시적으로 지정
-    publicDir: 'public', 
   },
   server: {
     port: 3000,
