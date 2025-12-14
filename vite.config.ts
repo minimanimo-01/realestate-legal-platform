@@ -4,7 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   // Vercel에서 CSS/JS 등 정적 에셋이 깨지는 것을 방지하기 위해 기본 경로를 루트로 명시합니다.
-  base: '/',
+  base: './',
   
   plugins: [react()],
   resolve: {
