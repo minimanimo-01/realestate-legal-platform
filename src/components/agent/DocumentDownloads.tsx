@@ -1,0 +1,226 @@
+import { useState, useMemo } from 'react';
+import { Download, Search, FileText, Pin, AlertCircle, Loader2 } from 'lucide-react';
+import { Input } from '../ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { toast } from 'sonner@2.0.3';
+import type { Document } from '../../App';
+
+interface DocumentDownloadsProps {
+  documents: Document[];
+}
+
+export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const filteredDocuments = useMemo(() => {
+    if (!searchQuery.trim()) return documents;
+    
+    const query = searchQuery.toLowerCase();
+    return documents.filter(doc => 
+      doc.name.toLowerCase().includes(query) ||
+      doc.description.toLowerCase().includes(query)
+    );
+  }, [documents, searchQuery]);
+
+  const sortedDocuments = useMemo(() => {
+    return [...filteredDocuments].sort((a, b) => {
+      // Pinned documents first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    });
+  }, [filteredDocuments]);
+
+  const getFileTypeColor = (fileType: string) => {
+    switch (fileType) {
+      case 'HWP':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'PDF':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'XLSX':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'DOCX':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
+    }
+  };
+
+  const handleDownload = async (document: Document) => {
+    console.log('다운로드 시작:', document.name);
+    setDownloadingId(document.id);
+
+    try {
+      // Check if fileUrl exists
+      if (!document.fileUrl || document.fileUrl === '#') {
+        console.log('파일 URL 없음:', document.name);
+        setDownloadingId(null);
+        toast.error(`"${document.name}" 파일이 아직 업로드되지 않았습니다.`, {
+          duration: 4000,
+        });
+        return;
+      }
+
+      console.log('파일 다운로드 요청 중...', document.fileUrl);
+      
+      // For mobile and PC compatibility, use fetch + blob approach
+      const response = await fetch(document.fileUrl);
+      
+      if (!response.ok) {
+        throw new Error('파일 다운로드에 실패했습니다.');
+      }
+
+      const blob = await response.blob();
+      console.log('Blob 생성 완료:', blob.size, 'bytes');
+      
+      // Create a blob URL
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element
+      const link = window.document.createElement('a');
+      link.href = blobUrl;
+      
+      // Set download filename based on fileType
+      const extension = document.fileType.toLowerCase();
+      const filename = `${document.name}.${extension}`;
+      link.download = filename;
+      
+      // Append to body, click, and remove
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(blobUrl);
+      
+      console.log('다운로드 완료:', document.name);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('다운로드 중 오류가 발생했습니다.', {
+        description: '파일을 다시 시도하거나 관리자에게 문의해주세요.',
+        duration: 4000,
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-full">
+      {/* Header */}
+      <div>
+        <h2 className="mb-2 text-[#1A2B4B]">신청 서류 다운로드</h2>
+        <p className="text-[#64748B]">
+          필요한 서식을 다운로드하여 활용하세요
+        </p>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-[#94A3B8]" />
+        <Input
+          type="text"
+          placeholder="서류명으로 검색..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 border-[#E2E8F0]"
+        />
+      </div>
+
+      {/* Documents Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {sortedDocuments.length === 0 ? (
+          <Card className="md:col-span-2">
+            <CardContent className="py-12 text-center text-[#64748B]">
+              검색 결과가 없습니다.
+            </CardContent>
+          </Card>
+        ) : (
+          sortedDocuments.map((doc) => (
+            <Card 
+              key={doc.id}
+              className={`hover:shadow-md transition-all break-words ${
+                doc.isPinned ? 'border-[#C7D2FE] bg-[#EEF2FF]' : ''
+              }`}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {doc.isPinned && (
+                      <Badge variant="secondary" className="bg-[#4F46E5] text-white">
+                        <Pin className="size-3 mr-1" />
+                        고정
+                      </Badge>
+                    )}
+                    <Badge 
+                      variant="outline" 
+                      className={getFileTypeColor(doc.fileType)}
+                    >
+                      {doc.fileType}
+                    </Badge>
+                  </div>
+                  <FileText className="size-5 text-[#94A3B8] flex-shrink-0" />
+                </div>
+                <CardTitle className="text-[#1A2B4B] break-words">{doc.name}</CardTitle>
+                <CardDescription className="text-[#64748B] break-words">{doc.description}</CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                {doc.tips && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="size-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-amber-900">
+                          <strong>작성 팁:</strong>
+                        </p>
+                        <p className="text-sm text-amber-800 mt-1 break-words">{doc.tips}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <Button 
+                  className="w-full bg-[#4F46E5] hover:bg-[#4338CA]"
+                  onClick={() => handleDownload(doc)}
+                  disabled={downloadingId === doc.id}
+                >
+                  {downloadingId === doc.id ? (
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="size-4 mr-2" />
+                  )}
+                  다운로드
+                </Button>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Info Boxes */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="bg-[#EEF2FF] border-[#C7D2FE]">
+          <CardContent className="pt-6">
+            <p className="text-sm text-[#4F46E5] break-words">
+              💡 <strong>모바일에서도 다운로드 가능:</strong> 스마트폰에서 서류를 다운로드하여 
+              카카오톡, 이메일 등으로 전송할 수 있습니다.
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-[#DBEAFE] border-[#93C5FD]">
+          <CardContent className="pt-6">
+            <p className="text-sm text-[#1E40AF] break-words">
+              📱 <strong>서류 문의:</strong> 작성 방법이 궁금하시면 법무사 사무실로 연락주세요.
+              Tel: 031-365-3410
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
