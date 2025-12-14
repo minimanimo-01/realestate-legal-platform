@@ -1,9 +1,7 @@
 {
   "build": {
     "env": {
-      // 빌드 환경이 프로덕션임을 명확히 합니다.
       "NODE_ENV": "production",
-      // Tailwind CSS가 Purge(최적화) 모드로 빌드를 수행하도록 강제합니다.
       "TAILWIND_MODE": "build" 
     }
   },
