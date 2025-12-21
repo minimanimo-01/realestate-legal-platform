@@ -79,37 +79,12 @@
   --sidebar-border: 217 33% 17%;
   --sidebar-ring: 212 35% 27%;
 }
-📋 수정 요약:
-단계	줄 번호	작업	내용
-1	83-122줄	삭제	@theme inline { ... } 블록 전체 삭제
-2	5-44줄	교체	:root 변수를 oklch → HSL 형식으로 변경
-3	46-81줄	교체	.dark 변수를 oklch → HSL 형식으로 변경
-4	124줄 이후	유지	나머지는 그대로 유지!
-✅ 수정 후 최종 파일 구조:
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --font-size: 16px;
-  --background: 0 0% 100%;
-  /* ... HSL 변수들 ... */
-}
-
-.dark {
-  --background: 222 47% 11%;
-  /* ... HSL 변수들 ... */
-}
-
-/* @theme inline 블록 삭제됨! */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  /* ... */
-}
-
+  
   body {
     @apply bg-background text-foreground;
   }
