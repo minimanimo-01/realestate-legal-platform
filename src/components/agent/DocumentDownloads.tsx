@@ -74,85 +74,96 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
       const extension = document.fileType.toLowerCase();
       const filename = `${document.name}.${extension}`;
       
-      if (isMobile) {
-        // Mobile approach: Direct link with download attribute
-        console.log('모바일 환경 감지, 직접 다운로드 시도');
+      // For all devices (mobile and PC), use fetch + blob approach
+      // This forces download instead of opening in browser
+      console.log('Blob 다운로드 시도 (모든 디바이스)');
+      
+      try {
+        // Fetch the file as blob
+        const response = await fetch(document.fileUrl, {
+          mode: 'cors',
+          credentials: 'omit',
+        });
+        
+        if (!response.ok) {
+          throw new Error('파일 다운로드에 실패했습니다.');
+        }
+
+        const blob = await response.blob();
+        console.log('Blob 생성 완료:', blob.size, 'bytes');
+        
+        // Create a blob URL
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element
+        const link = window.document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        
+        // For iOS, we need additional attributes
+        if (isIOS) {
+          link.target = '_self';
+        }
+        
+        // Add to DOM, trigger click, and remove
+        link.style.display = 'none';
+        window.document.body.appendChild(link);
+        
+        // Small delay for iOS compatibility
+        setTimeout(() => {
+          link.click();
+          
+          // Clean up after click
+          setTimeout(() => {
+            window.document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+          }, 100);
+        }, 100);
+        
+        // Show appropriate message
+        if (isMobile) {
+          toast.success('다운로드를 시작합니다.', {
+            description: isIOS 
+              ? '다운로드 폴더를 확인하세요. (Safari: 다운로드 아이콘 클릭)'
+              : '다운로드 폴더를 확인하세요.',
+            duration: 5000,
+          });
+        } else {
+          toast.success('다운로드 완료!', {
+            description: `"${document.name}" 파일이 저장되었습니다.`,
+            duration: 3000,
+          });
+        }
+        
+      } catch (fetchError) {
+        console.error('Blob 다운로드 실패:', fetchError);
+        
+        // Fallback: Try direct download with download attribute
+        console.log('Fallback: 직접 다운로드 시도');
         
         const link = window.document.createElement('a');
         link.href = document.fileUrl;
         link.download = filename;
         
-        // For iOS, we need to open in new tab due to security restrictions
+        // Try to force download with different approaches
         if (isIOS) {
+          // For iOS, open in new tab (best we can do with restrictions)
           link.target = '_blank';
           link.rel = 'noopener noreferrer';
+          
+          toast.info('파일을 새 탭에서 엽니다.', {
+            description: '파일을 길게 눌러 "파일에 저장"을 선택하세요.',
+            duration: 6000,
+          });
+        } else {
+          toast.success('다운로드를 시작합니다.', {
+            duration: 3000,
+          });
         }
         
-        // Trigger download
         window.document.body.appendChild(link);
         link.click();
         window.document.body.removeChild(link);
-        
-        toast.success('다운로드를 시작합니다.', {
-          description: isIOS ? '새 탭에서 파일이 열립니다. 길게 눌러서 저장하세요.' : '다운로드 폴더를 확인하세요.',
-          duration: 5000,
-        });
-        
-      } else {
-        // Desktop approach: Fetch + Blob for better compatibility
-        console.log('데스크톱 환경 감지, Blob 다운로드 시도');
-        
-        try {
-          const response = await fetch(document.fileUrl);
-          
-          if (!response.ok) {
-            throw new Error('파일 다운로드에 실패했습니다.');
-          }
-
-          const blob = await response.blob();
-          console.log('Blob 생성 완료:', blob.size, 'bytes');
-          
-          // Create a blob URL
-          const blobUrl = window.URL.createObjectURL(blob);
-          
-          // Create a temporary anchor element
-          const link = window.document.createElement('a');
-          link.href = blobUrl;
-          link.download = filename;
-          
-          // Append to body, click, and remove
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-          
-          // Clean up the blob URL after a delay
-          setTimeout(() => {
-            window.URL.revokeObjectURL(blobUrl);
-          }, 100);
-          
-          toast.success('다운로드 완료!', {
-            description: `"${document.name}" 파일이 저장되었습니다.`,
-            duration: 3000,
-          });
-          
-        } catch (fetchError) {
-          // Fallback to direct download if fetch fails (e.g., CORS)
-          console.warn('Blob 다운로드 실패, 직접 링크로 전환:', fetchError);
-          
-          const link = window.document.createElement('a');
-          link.href = document.fileUrl;
-          link.download = filename;
-          link.target = '_blank';
-          
-          window.document.body.appendChild(link);
-          link.click();
-          window.document.body.removeChild(link);
-          
-          toast.success('다운로드를 시작합니다.', {
-            description: '새 탭에서 파일이 열립니다.',
-            duration: 3000,
-          });
-        }
       }
       
       console.log('다운로드 완료:', document.name);
