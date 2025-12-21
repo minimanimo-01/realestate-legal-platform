@@ -66,35 +66,94 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
 
       console.log('파일 다운로드 요청 중...', document.fileUrl);
       
-      // For mobile and PC compatibility, use fetch + blob approach
-      const response = await fetch(document.fileUrl);
+      // Detect mobile device
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       
-      if (!response.ok) {
-        throw new Error('파일 다운로드에 실패했습니다.');
-      }
-
-      const blob = await response.blob();
-      console.log('Blob 생성 완료:', blob.size, 'bytes');
-      
-      // Create a blob URL
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      // Create a temporary anchor element
-      const link = window.document.createElement('a');
-      link.href = blobUrl;
-      
-      // Set download filename based on fileType
+      // Set download filename
       const extension = document.fileType.toLowerCase();
       const filename = `${document.name}.${extension}`;
-      link.download = filename;
       
-      // Append to body, click, and remove
-      window.document.body.appendChild(link);
-      link.click();
-      window.document.body.removeChild(link);
-      
-      // Clean up the blob URL
-      window.URL.revokeObjectURL(blobUrl);
+      if (isMobile) {
+        // Mobile approach: Direct link with download attribute
+        console.log('모바일 환경 감지, 직접 다운로드 시도');
+        
+        const link = window.document.createElement('a');
+        link.href = document.fileUrl;
+        link.download = filename;
+        
+        // For iOS, we need to open in new tab due to security restrictions
+        if (isIOS) {
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        }
+        
+        // Trigger download
+        window.document.body.appendChild(link);
+        link.click();
+        window.document.body.removeChild(link);
+        
+        toast.success('다운로드를 시작합니다.', {
+          description: isIOS ? '새 탭에서 파일이 열립니다. 길게 눌러서 저장하세요.' : '다운로드 폴더를 확인하세요.',
+          duration: 5000,
+        });
+        
+      } else {
+        // Desktop approach: Fetch + Blob for better compatibility
+        console.log('데스크톱 환경 감지, Blob 다운로드 시도');
+        
+        try {
+          const response = await fetch(document.fileUrl);
+          
+          if (!response.ok) {
+            throw new Error('파일 다운로드에 실패했습니다.');
+          }
+
+          const blob = await response.blob();
+          console.log('Blob 생성 완료:', blob.size, 'bytes');
+          
+          // Create a blob URL
+          const blobUrl = window.URL.createObjectURL(blob);
+          
+          // Create a temporary anchor element
+          const link = window.document.createElement('a');
+          link.href = blobUrl;
+          link.download = filename;
+          
+          // Append to body, click, and remove
+          window.document.body.appendChild(link);
+          link.click();
+          window.document.body.removeChild(link);
+          
+          // Clean up the blob URL after a delay
+          setTimeout(() => {
+            window.URL.revokeObjectURL(blobUrl);
+          }, 100);
+          
+          toast.success('다운로드 완료!', {
+            description: `"${document.name}" 파일이 저장되었습니다.`,
+            duration: 3000,
+          });
+          
+        } catch (fetchError) {
+          // Fallback to direct download if fetch fails (e.g., CORS)
+          console.warn('Blob 다운로드 실패, 직접 링크로 전환:', fetchError);
+          
+          const link = window.document.createElement('a');
+          link.href = document.fileUrl;
+          link.download = filename;
+          link.target = '_blank';
+          
+          window.document.body.appendChild(link);
+          link.click();
+          window.document.body.removeChild(link);
+          
+          toast.success('다운로드를 시작합니다.', {
+            description: '새 탭에서 파일이 열립니다.',
+            duration: 3000,
+          });
+        }
+      }
       
       console.log('다운로드 완료:', document.name);
     } catch (error) {
