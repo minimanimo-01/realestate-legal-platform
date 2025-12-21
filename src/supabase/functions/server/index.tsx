@@ -361,7 +361,9 @@ app.post("/make-server-0fddf210/upload", async (c) => {
     // Get signed URL (valid for 10 years)
     const { data: urlData, error: urlError } = await supabase.storage
       .from(BUCKET_NAME)
-      .createSignedUrl(fileName, 315360000); // 10 years in seconds
+      .createSignedUrl(fileName, 315360000, {
+        download: true, // Force download instead of inline display
+      }); // 10 years in seconds
 
     if (urlError) {
       console.error("Error creating signed URL:", urlError);
