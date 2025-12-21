@@ -63,7 +63,9 @@
           "recharts": "^2.15.2",
           "sonner": "^2.0.3",
           "tailwind-merge": "*",
-          "tailwindcss": "*",
+          "tailwindcss": "^3.4.1",
+          "autoprefixer": "^10.4.17",
+          "postcss": "^8.4.33",
           "vaul": "^1.1.2",
           "vite": "*"
       },
