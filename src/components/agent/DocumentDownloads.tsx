@@ -4,6 +4,7 @@ import { Input } from '../ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner@2.0.3';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import type { Document } from '../../App';
@@ -15,6 +16,7 @@ interface DocumentDownloadsProps {
 export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [showInAppBrowserWarning, setShowInAppBrowserWarning] = useState(false);
 
   const filteredDocuments = useMemo(() => {
     if (!searchQuery.trim()) return documents;
@@ -50,7 +52,26 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
     }
   };
 
+  // Detect in-app browser (KakaoTalk, Naver, Facebook, Instagram, Line)
+  const isInAppBrowser = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    return (
+      ua.includes('kakaotalk') ||
+      ua.includes('naver') ||
+      ua.includes('fban') ||
+      ua.includes('fbav') ||
+      ua.includes('instagram') ||
+      ua.includes('line')
+    );
+  };
+
   const handleDownload = async (doc: Document) => {
+    // Check if running in in-app browser
+    if (isInAppBrowser()) {
+      setShowInAppBrowserWarning(true);
+      return;
+    }
+
     console.log('다운로드 시작:', doc.name);
     setDownloadingId(doc.id);
 
@@ -256,6 +277,26 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* In-App Browser Warning Dialog */}
+      <Dialog open={showInAppBrowserWarning} onOpenChange={setShowInAppBrowserWarning}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#1A2B4B]">📱 카카오톡에서는 파일 다운로드가 제한됩니다</DialogTitle>
+            <DialogDescription className="text-[#64748B] pt-4">
+              우측 하단 버튼을 눌러 '외부 브라우저'에서 열어서 다운로드 해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => setShowInAppBrowserWarning(false)}
+              className="bg-[#4F46E5] hover:bg-[#4338CA]"
+            >
+              확인
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
