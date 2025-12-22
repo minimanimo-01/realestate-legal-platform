@@ -862,4 +862,65 @@ app.delete("/make-server-0fddf210/bank-rates/:id", async (c) => {
   }
 });
 
+// ========== FILE DOWNLOAD PROXY ENDPOINT ==========
+// This endpoint proxies file downloads and forces download headers
+// Usage: /make-server-0fddf210/download-proxy?url=<encoded-supabase-url>&filename=<filename>
+app.get("/make-server-0fddf210/download-proxy", async (c) => {
+  try {
+    const url = c.req.query("url");
+    const filename = c.req.query("filename") || "download.pdf";
+
+    if (!url) {
+      return c.json({ success: false, error: "Missing URL parameter" }, 400);
+    }
+
+    console.log("Proxying download for:", filename);
+
+    // Fetch the file from Supabase Storage
+    // The signed URL already has proper authentication
+    const response = await fetch(decodeURIComponent(url));
+
+    if (!response.ok) {
+      console.error("Failed to fetch file:", response.status, response.statusText);
+      return c.json({ success: false, error: "Failed to fetch file" }, 500);
+    }
+
+    // Get content type from original response or default to octet-stream
+    const contentType = response.headers.get("Content-Type") || "application/octet-stream";
+    const contentLength = response.headers.get("Content-Length");
+
+    // Properly encode filename for different browsers
+    // Use RFC 2047 encoding for international characters (Korean)
+    const encodedFilename = encodeURIComponent(filename);
+    const filenameAscii = filename.replace(/[^\x00-\x7F]/g, "_"); // ASCII fallback
+    
+    // Use both filename* (RFC 5987) and filename for maximum compatibility
+    const contentDisposition = `attachment; filename="${filenameAscii}"; filename*=UTF-8''${encodedFilename}`;
+
+    // Stream the response directly without loading into memory
+    // This is critical for large files (up to 50MB)
+    const headers = new Headers({
+      "Content-Type": contentType,
+      "Content-Disposition": contentDisposition,
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Expose-Headers": "Content-Disposition",
+      "Cache-Control": "no-cache",
+    });
+
+    // Add content-length if available
+    if (contentLength) {
+      headers.set("Content-Length", contentLength);
+    }
+
+    // Return streaming response (doesn't load entire file into memory)
+    return new Response(response.body, {
+      headers: headers,
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Error in download proxy:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 Deno.serve(app.fetch);
