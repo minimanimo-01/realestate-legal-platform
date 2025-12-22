@@ -67,7 +67,8 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
 
       console.log('파일 다운로드 요청 중...', doc.fileUrl);
       
-      // Detect mobile device
+      // Detect iOS device
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       // Set download filename
@@ -79,7 +80,7 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
       
       console.log('서버 프록시를 통한 다운로드 시작');
       
-      // Fetch with Authorization header to prevent 401 error
+      // Fetch file from server
       const response = await fetch(proxyUrl, {
         headers: { 'Authorization': `Bearer ${publicAnonKey}` }
       });
@@ -88,24 +89,37 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
         throw new Error('다운로드 실패');
       }
 
-      // Stream response to blob and trigger browser download
+      // Stream response to blob
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = filename; // Server header takes precedence, but set as backup
+      a.download = filename;
+      
+      // iOS Safari: Use _blank to trigger download in new tab (more reliable)
+      if (isIOS) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+      
       document.body.appendChild(a);
       a.click();
       
-      // Clean up memory after a short delay
+      // iOS needs longer timeout before cleanup
+      const cleanupDelay = isIOS ? 1000 : 100;
       setTimeout(() => {
         window.URL.revokeObjectURL(downloadUrl);
         document.body.removeChild(a);
-      }, 100);
+      }, cleanupDelay);
       
       // Show success message
-      if (isMobile) {
+      if (isIOS) {
+        toast.success('파일을 새 탭에서 엽니다', {
+          description: 'Safari의 공유 버튼으로 저장하거나 공유하세요.',
+          duration: 6000,
+        });
+      } else if (isMobile) {
         toast.success('다운로드를 시작합니다.', {
           description: '다운로드 폴더를 확인하세요.',
           duration: 5000,
