@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { toast } from 'sonner@2.0.3';
-import { projectId } from '../../utils/supabase/info';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import type { Document } from '../../App';
 
 interface DocumentDownloadsProps {
@@ -50,48 +50,58 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
     }
   };
 
-  const handleDownload = async (document: Document) => {
-    console.log('다운로드 시작:', document.name);
-    setDownloadingId(document.id);
+  const handleDownload = async (doc: Document) => {
+    console.log('다운로드 시작:', doc.name);
+    setDownloadingId(doc.id);
 
     try {
       // Check if fileUrl exists
-      if (!document.fileUrl || document.fileUrl === '#') {
-        console.log('파일 URL 없음:', document.name);
+      if (!doc.fileUrl || doc.fileUrl === '#') {
+        console.log('파일 URL 없음:', doc.name);
         setDownloadingId(null);
-        toast.error(`"${document.name}" 파일이 아직 업로드되지 않았습니다.`, {
+        toast.error(`"${doc.name}" 파일이 아직 업로드되지 않았습니다.`, {
           duration: 4000,
         });
         return;
       }
 
-      console.log('파일 다운로드 요청 중...', document.fileUrl);
+      console.log('파일 다운로드 요청 중...', doc.fileUrl);
       
       // Detect mobile device
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       // Set download filename
-      const extension = document.fileType.toLowerCase();
-      const filename = `${document.name}.${extension}`;
+      const extension = doc.fileType.toLowerCase();
+      const filename = `${doc.name}.${extension}`;
       
-      // Use server proxy download endpoint for reliable mobile downloads
-      const proxyUrl = `https://${projectId}.supabase.co/functions/v1/make-server-0fddf210/download-proxy?url=${encodeURIComponent(document.fileUrl)}&filename=${encodeURIComponent(filename)}`;
+      // Use server proxy download endpoint with Authorization header
+      const proxyUrl = `https://${projectId}.supabase.co/functions/v1/make-server-0fddf210/download-proxy?url=${encodeURIComponent(doc.fileUrl)}&filename=${encodeURIComponent(filename)}`;
       
       console.log('서버 프록시를 통한 다운로드 시작');
       
-      // Create a temporary anchor element and trigger download
-      const link = window.document.createElement('a');
-      link.href = proxyUrl;
-      link.download = filename;
+      // Fetch with Authorization header to prevent 401 error
+      const response = await fetch(proxyUrl, {
+        headers: { 'Authorization': `Bearer ${publicAnonKey}` }
+      });
       
-      // Add to DOM and trigger click
-      link.style.display = 'none';
-      window.document.body.appendChild(link);
-      link.click();
+      if (!response.ok) {
+        throw new Error('다운로드 실패');
+      }
+
+      // Stream response to blob and trigger browser download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
       
-      // Clean up after a short delay
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename; // Server header takes precedence, but set as backup
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up memory after a short delay
       setTimeout(() => {
-        window.document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
       }, 100);
       
       // Show success message
@@ -102,12 +112,12 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
         });
       } else {
         toast.success('다운로드 완료!', {
-          description: `"${document.name}" 파일이 저장되었습니다.`,
+          description: `"${doc.name}" 파일이 저장되었습니다.`,
           duration: 3000,
         });
       }
       
-      console.log('다운로드 완료:', document.name);
+      console.log('다운로드 완료:', doc.name);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('다운로드 중 오류가 발생했습니다.', {
