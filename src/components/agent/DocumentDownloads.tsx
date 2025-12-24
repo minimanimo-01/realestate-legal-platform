@@ -280,14 +280,16 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
 
       {/* In-App Browser Warning Dialog */}
       <Dialog open={showInAppBrowserWarning} onOpenChange={setShowInAppBrowserWarning}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="text-[#1A2B4B]">📱 카카오톡에서는 파일 다운로드가 제한됩니다</DialogTitle>
-            <DialogDescription className="text-[#64748B] pt-4">
+        <DialogContent className="sm:max-w-[425px] px-6 py-6">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-[#1A2B4B] pr-8 leading-relaxed">
+              📱 카카오톡에서는 파일 다운로드가 제한됩니다
+            </DialogTitle>
+            <DialogDescription className="text-[#64748B] pt-2 leading-relaxed">
               우측 하단 버튼을 눌러 '외부 브라우저'에서 열어서 다운로드 해주세요.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-6">
             <Button 
               onClick={() => setShowInAppBrowserWarning(false)}
               className="bg-[#4F46E5] hover:bg-[#4338CA]"
