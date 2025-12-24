@@ -4,7 +4,9 @@ import { Input } from '../ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { toast } from 'sonner@2.0.3';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import type { Document } from '../../App';
 
 interface DocumentDownloadsProps {
@@ -14,6 +16,7 @@ interface DocumentDownloadsProps {
 export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [showInAppBrowserWarning, setShowInAppBrowserWarning] = useState(false);
 
   const filteredDocuments = useMemo(() => {
     if (!searchQuery.trim()) return documents;
@@ -49,54 +52,107 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
     }
   };
 
-  const handleDownload = async (document: Document) => {
-    console.log('다운로드 시작:', document.name);
-    setDownloadingId(document.id);
+  // Detect in-app browser (KakaoTalk, Naver, Facebook, Instagram, Line)
+  const isInAppBrowser = () => {
+    const ua = navigator.userAgent.toLowerCase();
+    return (
+      ua.includes('kakaotalk') ||
+      ua.includes('naver') ||
+      ua.includes('fban') ||
+      ua.includes('fbav') ||
+      ua.includes('instagram') ||
+      ua.includes('line')
+    );
+  };
+
+  const handleDownload = async (doc: Document) => {
+    // Check if running in in-app browser
+    if (isInAppBrowser()) {
+      setShowInAppBrowserWarning(true);
+      return;
+    }
+
+    console.log('다운로드 시작:', doc.name);
+    setDownloadingId(doc.id);
 
     try {
       // Check if fileUrl exists
-      if (!document.fileUrl || document.fileUrl === '#') {
-        console.log('파일 URL 없음:', document.name);
+      if (!doc.fileUrl || doc.fileUrl === '#') {
+        console.log('파일 URL 없음:', doc.name);
         setDownloadingId(null);
-        toast.error(`"${document.name}" 파일이 아직 업로드되지 않았습니다.`, {
+        toast.error(`"${doc.name}" 파일이 아직 업로드되지 않았습니다.`, {
           duration: 4000,
         });
         return;
       }
 
-      console.log('파일 다운로드 요청 중...', document.fileUrl);
+      console.log('파일 다운로드 요청 중...', doc.fileUrl);
       
-      // For mobile and PC compatibility, use fetch + blob approach
-      const response = await fetch(document.fileUrl);
+      // Detect iOS device
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      // Set download filename
+      const extension = doc.fileType.toLowerCase();
+      const filename = `${doc.name}.${extension}`;
+      
+      // Use server proxy download endpoint with Authorization header
+      const proxyUrl = `https://${projectId}.supabase.co/functions/v1/make-server-0fddf210/download-proxy?url=${encodeURIComponent(doc.fileUrl)}&filename=${encodeURIComponent(filename)}`;
+      
+      console.log('서버 프록시를 통한 다운로드 시작');
+      
+      // Fetch file from server
+      const response = await fetch(proxyUrl, {
+        headers: { 'Authorization': `Bearer ${publicAnonKey}` }
+      });
       
       if (!response.ok) {
-        throw new Error('파일 다운로드에 실패했습니다.');
+        throw new Error('다운로드 실패');
       }
 
+      // Stream response to blob
       const blob = await response.blob();
-      console.log('Blob 생성 완료:', blob.size, 'bytes');
+      const downloadUrl = window.URL.createObjectURL(blob);
       
-      // Create a blob URL
-      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = filename;
       
-      // Create a temporary anchor element
-      const link = window.document.createElement('a');
-      link.href = blobUrl;
+      // iOS Safari: Use _blank to trigger download in new tab (more reliable)
+      if (isIOS) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
       
-      // Set download filename based on fileType
-      const extension = document.fileType.toLowerCase();
-      const filename = `${document.name}.${extension}`;
-      link.download = filename;
+      document.body.appendChild(a);
+      a.click();
       
-      // Append to body, click, and remove
-      window.document.body.appendChild(link);
-      link.click();
-      window.document.body.removeChild(link);
+      // iOS needs longer timeout before cleanup
+      const cleanupDelay = isIOS ? 1000 : 100;
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+        document.body.removeChild(a);
+      }, cleanupDelay);
       
-      // Clean up the blob URL
-      window.URL.revokeObjectURL(blobUrl);
+      // Show success message
+      if (isIOS) {
+        toast.success('파일을 새 탭에서 엽니다', {
+          description: 'Safari의 공유 버튼으로 저장하거나 공유하세요.',
+          duration: 6000,
+        });
+      } else if (isMobile) {
+        toast.success('다운로드를 시작합니다.', {
+          description: '다운로드 폴더를 확인하세요.',
+          duration: 5000,
+        });
+      } else {
+        toast.success('다운로드 완료!', {
+          description: `"${doc.name}" 파일이 저장되었습니다.`,
+          duration: 3000,
+        });
+      }
       
-      console.log('다운로드 완료:', document.name);
+      console.log('다운로드 완료:', doc.name);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('다운로드 중 오류가 발생했습니다.', {
@@ -221,6 +277,28 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* In-App Browser Warning Dialog */}
+      <Dialog open={showInAppBrowserWarning} onOpenChange={setShowInAppBrowserWarning}>
+        <DialogContent className="sm:max-w-[425px] px-6 py-6">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-[#1A2B4B] pr-8 leading-relaxed">
+              📱 카카오톡에서는 파일 다운로드가 제한됩니다
+            </DialogTitle>
+            <DialogDescription className="text-[#64748B] pt-2 leading-relaxed">
+              우측 하단 버튼을 눌러 '외부 브라우저'에서 열어서 다운로드 해주세요.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end pt-6">
+            <Button 
+              onClick={() => setShowInAppBrowserWarning(false)}
+              className="bg-[#4F46E5] hover:bg-[#4338CA]"
+            >
+              확인
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
