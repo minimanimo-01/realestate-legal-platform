@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'path';
 
 export default defineConfig({
+  base: '/',
   plugins: [react()],
   resolve: {
     extensions: ['.js', '.jsx', '.ts', '.tsx', '.json'],
@@ -51,7 +52,7 @@ export default defineConfig({
     },
   },
   css: {
-    postcss: './postcss.config.js',  // ← 이 부분만 추가!
+    postcss: './postcss.config.js',
   },
   build: {
     target: 'esnext',
