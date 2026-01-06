@@ -204,8 +204,8 @@ export function Home({ onSelectCategory }: HomeProps) {
       <footer className="bg-[#F1F5F9] border-t mt-8">
         <div className="container mx-auto px-4 py-4 md:py-6">
           <div className="text-center text-[#64748B]">
-            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">다온 법무사사무소 | 법무사 손일봉 · 오금현 | 담당: 김민식 사무장</p>
-            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">경기도 안산시 단원구 광덕2로 196-5, 401호 | Tel: 031-365-3410 | Fax: 031-365-3411</p>
+            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">다온 법무사사무소 | 법무사 손일환 · 오광현 | 담당: 김민식 과장</p>
+            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">경기도 안산시 단원구 광덕2로 186-5, 401호 (고잔동, 성진빌딩) | Tel: 031-365-3410 | Fax: 031-365-3411</p>
             <p className="text-[#94A3B8] text-[10px] md:text-xs mt-2 md:mt-3">© 2025 다온 법무사사무소. All rights reserved.</p>
           </div>
           
