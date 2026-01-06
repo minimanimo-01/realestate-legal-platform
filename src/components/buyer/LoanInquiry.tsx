@@ -227,7 +227,7 @@ export function LoanInquiry() {
 
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <p className="text-sm text-blue-900">
-                💡 <strong>FAX 번호:</strong> 031-365-3411
+                💡 <strong>FAX 번호:</strong> 0303-3130-9709
               </p>
               <p className="text-sm text-blue-800 mt-2">
                 대출 상담 관련 궁금한 점은 편하게 문의주세요.

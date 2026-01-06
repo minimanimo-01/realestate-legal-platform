@@ -168,7 +168,7 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
     <div className="space-y-6 max-w-full">
       {/* Header */}
       <div>
-        <h2 className="mb-2 text-[#1A2B4B]">신청 서류 다운로드</h2>
+        <h2 className="mb-2 text-[#1A2B4B]">등기 관련 서식 다운로드</h2>
         <p className="text-[#64748B]">
           필요한 서식을 다운로드하여 활용하세요
         </p>
@@ -179,7 +179,7 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-[#94A3B8]" />
         <Input
           type="text"
-          placeholder="서류명으로 검색..."
+          placeholder="서식명으로 검색..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10 border-[#E2E8F0]"
@@ -262,7 +262,7 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
         <Card className="bg-[#EEF2FF] border-[#C7D2FE]">
           <CardContent className="pt-6">
             <p className="text-sm text-[#4F46E5] break-words">
-              💡 <strong>모바일에서도 다운로드 가능:</strong> 스마트폰에서 서류를 다운로드하여 
+              💡 <strong>모바일에서도 다운로드 가능:</strong> 스마트폰에서 파일 다운로드하여 
               카카오톡, 이메일 등으로 전송할 수 있습니다.
             </p>
           </CardContent>
@@ -271,8 +271,8 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
         <Card className="bg-[#DBEAFE] border-[#93C5FD]">
           <CardContent className="pt-6">
             <p className="text-sm text-[#1E40AF] break-words">
-              📱 <strong>서류 문의:</strong> 작성 방법이 궁금하시면 법무사 사무실로 연락주세요.
-              Tel: 031-365-3410
+              📱 <strong>서식 문의:</strong> 작성 방법이 궁금하시면 담당자에게 연락주세요.
+              Tel: 010-9209-7693
             </p>
           </CardContent>
         </Card>

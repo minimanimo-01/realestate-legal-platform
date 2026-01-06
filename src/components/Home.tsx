@@ -43,7 +43,7 @@ export function Home({ onSelectCategory }: HomeProps) {
                 />
               </div>
               <div className="flex-1">
-                <h2 className="text-[#1A2B4B] mb-2">사무장 김민식</h2>
+                <h2 className="text-[#1A2B4B] mb-2">김민식 과장</h2>
                 <p className="text-[#1A2B4B]/70 text-sm leading-relaxed">
                   복잡한 법률 서류와 등기 절차, 이제 전문가에게 맡기세요.
                   <br />
@@ -157,13 +157,13 @@ export function Home({ onSelectCategory }: HomeProps) {
                   </div>
                   <div>
                     <h4 className="text-[#1A2B4B] text-xs">다온 법무사사무소</h4>
-                    <p className="text-[12px] text-[#64748B]">법무사 손일봉·오금현</p>
+                    <p className="text-[12px] text-[#64748B]">법무사 손일환·오광현</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-1.5 text-xs">
                   <span className="text-[#4F46E5] text-[10px]">📍</span>
                   <p className="text-[#94A3B8] text-[12px] leading-relaxed">
-                    경기도 안산시 단원구 광덕2로 196-5, 401호(원곡동, 성덕빌딩)
+                    경기도 안산시 단원구 광덕2로 186-5, 401호 (고잔동, 성진빌딩)
                   </p>
                 </div>
               </CardContent>
@@ -173,8 +173,8 @@ export function Home({ onSelectCategory }: HomeProps) {
             <Card className="border-0 bg-white">
               <CardContent className="p-6">
                 <div className="mb-4">
-                  <p className="text-xs text-[#4F46E5] mb-1">담당 사무장</p>
-                  <h4 className="text-[#1A2B4B] text-sm">김민식 사무장</h4>
+                  <p className="text-xs text-[#4F46E5] mb-1">담당자</p>
+                  <h4 className="text-[#1A2B4B] text-sm">김민식 과장</h4>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -187,11 +187,11 @@ export function Home({ onSelectCategory }: HomeProps) {
                   </div>
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-[#64748B] w-12">팩스</p>
-                    <p className="text-[#1A2B4B] text-sm">031-365-3411</p>
+                    <p className="text-[#1A2B4B] text-sm">0303-3130-9709</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-[#64748B] w-12">이메일</p>
-                    <p className="text-[#1A2B4B] text-xs">zaikiwr@naver.com</p>
+                    <p className="text-[#1A2B4B] text-xs"> zzarkwhr@naver.com</p>
                   </div>
                 </div>
               </CardContent>
@@ -204,8 +204,8 @@ export function Home({ onSelectCategory }: HomeProps) {
       <footer className="bg-[#F1F5F9] border-t mt-8">
         <div className="container mx-auto px-4 py-4 md:py-6">
           <div className="text-center text-[#64748B]">
-            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">다온 법무사사무소 | 법무사 손일봉 · 오금현 | 담당: 김민식 사무장</p>
-            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">경기도 안산시 단원구 광덕2로 196-5, 401호 | Tel: 031-365-3410 | Fax: 031-365-3411</p>
+            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">다온 법무사사무소 | 법무사 손일환 · 오광현 | 담당: 김민식 과장</p>
+            <p className="text-[10px] md:text-xs mb-0.5 md:mb-1">경기도 안산시 단원구 광덕2로 186-5, 401호 (고잔동, 성진빌딩) | Tel: 031-365-3410 | Fax: 031-365-3411</p>
             <p className="text-[#94A3B8] text-[10px] md:text-xs mt-2 md:mt-3">© 2025 다온 법무사사무소. All rights reserved.</p>
           </div>
           

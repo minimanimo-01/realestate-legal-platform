@@ -179,8 +179,8 @@ export function PasswordAuth({
 
               <div className="text-center text-sm text-[#64748B] mt-4">
                 <p>패스워드를 잊으셨나요?</p>
-                <p className="mt-1">법무사 사무실로 문의해주세요.</p>
-                <p className="mt-2 text-[#1A2B4B]">Tel: 031-365-3410</p>
+                <p className="mt-1">담당자에게 문의해주세요.</p>
+                <p className="mt-2 text-[#1A2B4B]">Tel: 010-9209-7693</p>
               </div>
             </form>
           </CardContent>
