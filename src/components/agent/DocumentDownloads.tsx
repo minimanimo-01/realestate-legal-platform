@@ -271,8 +271,8 @@ export function DocumentDownloads({ documents }: DocumentDownloadsProps) {
         <Card className="bg-[#DBEAFE] border-[#93C5FD]">
           <CardContent className="pt-6">
             <p className="text-sm text-[#1E40AF] break-words">
-              📱 <strong>서식 문의:</strong> 작성 방법이 궁금하시면 법무사 사무실로 연락주세요.
-              Tel: 031-365-3410
+              📱 <strong>서식 문의:</strong> 작성 방법이 궁금하시면 담당자에게 연락주세요.
+              Tel: 010-9209-7693
             </p>
           </CardContent>
         </Card>
