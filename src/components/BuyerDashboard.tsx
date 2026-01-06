@@ -26,7 +26,7 @@ export function BuyerDashboard({
       <PasswordAuth
         onAuthenticate={onAuthenticate}
         onBack={onBack}
-        title="매수인 로그인"
+        title="고객 로그인"
         description="주택 구입자를 위한 등기 및 세금 정보를 확인하려면 패스워드를 입력하세요"
         storageKey="buyer-auth"
       />
