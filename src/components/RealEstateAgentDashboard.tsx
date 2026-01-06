@@ -81,7 +81,7 @@ export function RealEstateAgentDashboard({
             </TabsTrigger>
             <TabsTrigger value="documents" className="gap-2 data-[state=active]:bg-[#4F46E5] data-[state=active]:text-white">
               <FileText className="size-4" />
-              <span className="hidden sm:inline">신청 서류</span>
+              <span className="hidden sm:inline">등기 관련 서식</span>
               <span className="sm:hidden">서류</span>
             </TabsTrigger>
             <TabsTrigger value="rates" className="gap-2 data-[state=active]:bg-[#4F46E5] data-[state=active]:text-white">
