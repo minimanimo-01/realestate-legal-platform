@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Shield, FileText, Key, LogOut, BarChart3 } from 'lucide-react';
+import { Shield, FileText, Key, LogOut, BarChart3, ClipboardList, FileCheck } from 'lucide-react';
 import { PasswordAuth } from './PasswordAuth';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArticleManager } from './admin/ArticleManager';
 import { PasswordManager } from './admin/PasswordManager';
+import { DocumentRequirementsManager } from './admin/DocumentRequirementsManager';
+import { RegistrationDocumentsManager } from './admin/RegistrationDocumentsManager';
 import type { Article, BankRate } from '../App';
 
 interface AdminDashboardProps {
@@ -86,7 +88,7 @@ export function AdminDashboard({
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid bg-white">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid bg-white">
             <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-[#1A2B4B] data-[state=active]:text-white">
               <BarChart3 className="size-4" />
               <span className="hidden sm:inline">개요</span>
@@ -96,10 +98,20 @@ export function AdminDashboard({
               <span className="hidden sm:inline">콘텐츠 관리</span>
               <span className="sm:hidden">콘텐츠</span>
             </TabsTrigger>
+            <TabsTrigger value="loan-docs" className="gap-2 data-[state=active]:bg-[#1A2B4B] data-[state=active]:text-white">
+              <ClipboardList className="size-4" />
+              <span className="hidden sm:inline">대출 서류</span>
+              <span className="sm:hidden">대출</span>
+            </TabsTrigger>
+            <TabsTrigger value="registration-docs" className="gap-2 data-[state=active]:bg-[#1A2B4B] data-[state=active]:text-white">
+              <FileCheck className="size-4" />
+              <span className="hidden sm:inline">등기 서류</span>
+              <span className="sm:hidden">등기</span>
+            </TabsTrigger>
             <TabsTrigger value="passwords" className="gap-2 data-[state=active]:bg-[#1A2B4B] data-[state=active]:text-white">
               <Key className="size-4" />
-              <span className="hidden sm:inline">패스워드 관리</span>
-              <span className="sm:hidden">패스워드</span>
+              <span className="hidden sm:inline">패스워드</span>
+              <span className="sm:hidden">PW</span>
             </TabsTrigger>
           </TabsList>
 
@@ -233,6 +245,14 @@ export function AdminDashboard({
               bankRates={bankRates}
               setBankRates={setBankRates}
             />
+          </TabsContent>
+
+          <TabsContent value="loan-docs" className="space-y-4">
+            <DocumentRequirementsManager />
+          </TabsContent>
+
+          <TabsContent value="registration-docs" className="space-y-4">
+            <RegistrationDocumentsManager />
           </TabsContent>
 
           <TabsContent value="passwords" className="space-y-4">
