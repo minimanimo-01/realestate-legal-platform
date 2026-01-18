@@ -268,17 +268,6 @@ export function AdminDashboard({
 
           {/* Customer Content Management Tab */}
           <TabsContent value="customer-content" className="space-y-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users2 className="size-6 text-blue-600" />
-                  고객 콘텐츠 관리
-                </CardTitle>
-                <CardDescription className="text-slate-700">
-                  매수인에게 제공되는 콘텐츠를 관리하세요
-                </CardDescription>
-              </CardHeader>
-            </Card>
 
             {/* Sub Tabs for Customer Content */}
             <Tabs value={customerContentTab} onValueChange={setCustomerContentTab}>
