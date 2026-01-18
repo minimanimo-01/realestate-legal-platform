@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Edit, TrendingUp, TrendingDown, Minus, Plus } from 'lucide-react';
+import { Edit, TrendingUp, TrendingDown, Minus, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -175,6 +175,46 @@ export function BankRateManager({ bankRates, setBankRates }: BankRateManagerProp
     }
   };
 
+  const handleDelete = async (id: string, tier: 'tier1' | 'tier2', bankName: string) => {
+    if (!confirm(`정말 "${bankName}"을(를) 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/bank-rates/${id}`, {
+        method: 'DELETE',
+        headers: API_HEADERS,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        if (tier === 'tier1') {
+          setBankRates({
+            ...bankRates,
+            tier1: bankRates.tier1.filter(r => r.id !== id),
+          });
+        } else {
+          setBankRates({
+            ...bankRates,
+            tier2: bankRates.tier2.filter(r => r.id !== id),
+          });
+        }
+        toast.success('은행이 성공적으로 삭제되었습니다');
+      } else {
+        console.error('Failed to delete bank rate:', result.error);
+        toast.error('은행 삭제에 실패했습니다');
+      }
+    } catch (error) {
+      console.error('Error deleting bank rate:', error);
+      toast.error('삭제 중 오류가 발생했습니다');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const getRateChange = (current: number, previous?: number) => {
     if (!previous) return null;
     const change = current - previous;
@@ -236,13 +276,25 @@ export function BankRateManager({ bankRates, setBankRates }: BankRateManagerProp
                 <RateChangeIndicator current={rate.maxRate} previous={rate.lastMonthMax} />
               </TableCell>
               <TableCell className="text-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleOpenDialog(rate, tier)}
-                >
-                  <Edit className="size-4" />
-                </Button>
+                <div className="flex items-center justify-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleOpenDialog(rate, tier)}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    <Edit className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(rate.id, tier, rate.bankName)}
+                    disabled={isSaving}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

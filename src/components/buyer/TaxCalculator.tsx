@@ -1,13 +1,81 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calculator, Info, Phone, MessageSquare, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Label } from '../ui/label';
 import { Slider } from '../ui/slider';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
+
+interface TaxInfo {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  displayOrder: number;
+  updatedAt: string;
+}
 
 export function TaxCalculator() {
   const [propertyValue, setPropertyValue] = useState(400000000); // 4억원 기본값
+  const [loading, setLoading] = useState(true);
+  const [taxRates, setTaxRates] = useState<TaxInfo[]>([]);
+  const [taxReductions, setTaxReductions] = useState<TaxInfo[]>([]);
+
+  // Load tax info from database
+  useEffect(() => {
+    loadTaxInfo();
+  }, []);
+
+  const loadTaxInfo = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0fddf210/tax-info`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.taxInfo) {
+          const rates = data.taxInfo.filter((item: TaxInfo) => item.type === 'rate');
+          const reductions = data.taxInfo.filter((item: TaxInfo) => item.type === 'reduction');
+          
+          setTaxRates(rates);
+          setTaxReductions(reductions);
+        }
+      }
+    } catch (error) {
+      console.error('취득세 정보 불러오기 오류:', error);
+      // Keep default values on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Default values if DB is empty
+  const defaultRates = [
+    { title: '6억원 이하', description: '1~3%' },
+    { title: '6억원 초과 ~ 9억원 이하', description: '1~3%' },
+    { title: '9억원 초과', description: '3%' },
+  ];
+
+  const defaultReductions = [
+    { title: '생애최초 주택 구입', description: '취득세 최대 200만원 감면 (12억원 이하, 85㎡ 이하)' },
+    { title: '다자녀 가구', description: '자녀 2명 이상 가구 취득세 50% 감면' },
+    { title: '신혼부부', description: '일정 요건 충족 시 취득세 감면 가능' },
+    { title: '1주택자', description: '조정대상지역 외 1주택 보유 시 기본세율 적용' },
+  ];
+
+  const displayRates = taxRates.length > 0 ? taxRates : defaultRates;
+  const displayReductions = taxReductions.length > 0 ? taxReductions : defaultReductions;
 
   // 매매가액 범위 설정 (5천만원 ~ 10억)
   const minValue = 50000000; // 5천만원
@@ -73,25 +141,6 @@ export function TaxCalculator() {
   const handleSliderChange = (values: number[]) => {
     setPropertyValue(values[0]);
   };
-
-  const taxReductions = [
-    {
-      title: '생애최초 주택 구입',
-      description: '취득세 최대 200만원 감면 (12억원 이하, 85㎡ 이하)',
-    },
-    {
-      title: '다자녀 가구',
-      description: '자녀 2명 이상 가구 취득세 50% 감면',
-    },
-    {
-      title: '신혼부부',
-      description: '일정 요건 충족 시 취득세 감면 가능',
-    },
-    {
-      title: '1주택자',
-      description: '조정대상지역 외 1주택 보유 시 기본세율 적용',
-    },
-  ];
 
   return (
     <div className="space-y-6">
@@ -190,18 +239,12 @@ export function TaxCalculator() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <span className="text-slate-700">6억원 이하</span>
-              <span className="text-slate-900">1~3%</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <span className="text-slate-700">6억원 초과 ~ 9억원 이하</span>
-              <span className="text-slate-900">1~3%</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-              <span className="text-slate-700">9억원 초과</span>
-              <span className="text-slate-900">3%</span>
-            </div>
+            {displayRates.map((rate, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <span className="text-slate-700 whitespace-pre-line">{rate.title}</span>
+                <span className="text-slate-900 whitespace-pre-line">{rate.description}</span>
+              </div>
+            ))}
           </div>
           <p className="text-xs text-slate-500 mt-4">
             ※ 조정대상지역, 보유 주택 수 등에 따라 중과세율(8~12%)이 적용될 수 있습니다.
@@ -219,10 +262,10 @@ export function TaxCalculator() {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
-            {taxReductions.map((reduction, idx) => (
+            {displayReductions.map((reduction, idx) => (
               <div key={idx} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <h4 className="text-emerald-900 mb-2">{reduction.title}</h4>
-                <p className="text-sm text-emerald-800">{reduction.description}</p>
+                <h4 className="text-emerald-900 mb-2 whitespace-pre-line">{reduction.title}</h4>
+                <p className="text-sm text-emerald-800 whitespace-pre-line">{reduction.description}</p>
               </div>
             ))}
           </div>

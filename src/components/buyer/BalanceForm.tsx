@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Separator } from '../ui/separator';
+import { Separator } from '../zui/separator';
 import html2canvas from 'html2canvas';
 
 export function BalanceForm() {
@@ -126,13 +126,31 @@ export function BalanceForm() {
   };
 
   const handlePrint = () => {
+    // 인쇄 시 placeholder 숨기기
+    const inputs = formRef.current?.querySelectorAll('input');
+    const originalPlaceholders: string[] = [];
+    
+    if (inputs) {
+      inputs.forEach((input, index) => {
+        originalPlaceholders[index] = input.placeholder;
+        input.placeholder = '';
+      });
+    }
+
     window.print();
+
+    // 인쇄 후 placeholder 복원
+    if (inputs) {
+      inputs.forEach((input, index) => {
+        input.placeholder = originalPlaceholders[index];
+      });
+    }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
+      <div className="no-print">
         <h2 className="mt-4 mb-2 text-slate-900">상환 및 잔금 지급 내역서</h2>
         <p className="text-slate-600">
           잔금일에 상환 및 잔금 지급 내역서로 투명한 정산을 하실 수 있습니다. 
@@ -140,7 +158,7 @@ export function BalanceForm() {
       </div>
 
       {/* Info Card */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-blue-50 border-blue-200 no-print">
         <CardContent className="pt-6">
           <div className="flex items-start gap-2">
             <AlertCircle className="size-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -158,7 +176,7 @@ export function BalanceForm() {
 
       {/* Form Card */}
       <Card className="border-2">
-        <CardHeader>
+        <CardHeader className="no-print">
           <CardTitle className="flex items-center gap-2">
             <Receipt className="size-5" />
             상환 및 잔금 지급 내역서
@@ -168,7 +186,7 @@ export function BalanceForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="p-3 sm:p-6">
-          <div ref={formRef} className="space-y-4 p-2 sm:p-6 bg-white" style={{
+          <div ref={formRef} className="space-y-4 p-2 sm:p-6 bg-white print-content" style={{
             backgroundColor: '#ffffff',
             color: '#0f172a'
           }}>
@@ -622,7 +640,7 @@ export function BalanceForm() {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 no-print">
             <Button
               onClick={handleDownloadImage}
               className="flex-1 gap-2"
@@ -641,14 +659,14 @@ export function BalanceForm() {
             </Button>
           </div>
 
-          <p className="text-xs text-slate-500 text-center mt-4">
+          <p className="text-xs text-slate-500 text-center mt-4 no-print">
             ※ 작성한 정산서는 이미지로 저장하거나 인쇄할 수 있습니다
           </p>
         </CardContent>
       </Card>
 
       {/* Tips Card */}
-      <Card className="bg-emerald-50 border-emerald-200">
+      <Card className="bg-emerald-50 border-emerald-200 no-print">
         <CardContent className="pt-6">
           <h4 className="text-emerald-900 mb-3">작성 가이드</h4>
           <ul className="space-y-2 text-sm text-emerald-800">
@@ -671,6 +689,52 @@ export function BalanceForm() {
           </ul>
         </CardContent>
       </Card>
+
+      {/* Print Styles */}
+      <style>{`
+        @media print {
+          /* 인쇄 시 페이지 전체에서 print-content만 표시 */
+          body * {
+            visibility: hidden;
+          }
+          
+          .print-content, .print-content * {
+            visibility: visible;
+          }
+          
+          .print-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px !important;
+            margin: 0 !important;
+          }
+          
+          /* no-print 클래스가 있는 요소 숨기기 */
+          .no-print {
+            display: none !important;
+          }
+          
+          /* 페이지 설정 */
+          @page {
+            size: A4;
+            margin: 15mm;
+          }
+          
+          /* 인쇄용 추가 스타일 */
+          .print-content input {
+            border: 1px solid #cbd5e1 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          
+          .print-content div[style*="backgroundColor"] {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+      `}</style>
     </div>
   );
 }

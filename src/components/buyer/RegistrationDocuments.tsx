@@ -1,51 +1,134 @@
-import { FileCheck, CheckCircle2, Home, Gift, Heart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileCheck, CheckCircle2, Home, Gift, Heart, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
+
+interface RegistrationDocument {
+  id: string;
+  registrationType: string;
+  partyType: string | null;
+  documents: string[];
+  notice: string;
+  updatedAt: string;
+}
 
 export function RegistrationDocuments() {
-  const documentsByType = {
-    sale: {
-      seller: [
-        '등기권리증 (또는 등기필증)',
-        '인감증명서 (부동산 처분용, 발급 3개월 이내)',
-        '주민등록초본 (발급 3개월 이내)',
-        '인감도장',
-        '신분증 (주민등록증 또는 운전면허증)',
-      ],
-      buyer: [
-        '주민등록초본 (발급 3개월 이내)',
-        '도장 (인감도장 또는 서명)',
-        '신분증 (주민등록증 또는 운전면허증)',
-        '매매계약서 원본',
-      ],
-    },
-    gift: {
-      donor: [
-        '등기권리증 (또는 등기필증)',
-        '인감증명서 (부동산 처분용, 발급 3개월 이내)',
-        '주민등록초본 (발급 3개월 이내)',
-        '인감도장',
-        '신분증',
-      ],
-      receiver: [
-        '주민등록초본 (발급 3개월 이내)',
-        '가족관계증명서 (증여자와의 관계 확인용)',
-        '도장',
-        '신분증',
-        '증여계약서',
-      ],
-    },
-    inheritance: {
-      documents: [
-        '피상속인 제적등본 (사망 확인용)',
-        '상속인 전원의 가족관계증명서',
-        '상속인 전원의 주민등록초본',
-        '상속인 전원의 인감증명서 및 인감도장',
-        '유산분할협의서 (상속인이 여럿인 경우)',
-        '등기권리증',
-      ],
-    },
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<RegistrationDocument[]>([]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+  const loadDocuments = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0fddf210/registration-documents`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.documents && data.documents.length > 0) {
+          setDocuments(data.documents);
+        }
+      }
+    } catch (error) {
+      console.error('등기 서류 목록 불러오기 오류:', error);
+      // Keep default values on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDocument = (registrationType: string, partyType?: string | null) => {
+    const id = partyType ? `${registrationType}_${partyType}` : registrationType;
+    return documents.find(d => d.id === id) || null;
+  };
+
+  const saleSellerDoc = getDocument('sale', 'seller') || {
+    id: 'sale_seller',
+    registrationType: 'sale',
+    partyType: 'seller',
+    documents: [
+      '등기권리증 (또는 등기필증)',
+      '인감증명서 (부동산 처분용, 발급 3개월 이내)',
+      '주민등록초본 (발급 3개월 이내)',
+      '인감도장',
+      '신분증 (주민등록증 또는 운전면허증)',
+    ],
+    notice: '',
+    updatedAt: new Date().toISOString().split('T')[0],
+  };
+
+  const saleBuyerDoc = getDocument('sale', 'buyer') || {
+    id: 'sale_buyer',
+    registrationType: 'sale',
+    partyType: 'buyer',
+    documents: [
+      '주민등록초본 (발급 3개월 이내)',
+      '도장 (인감도장 또는 서명)',
+      '신분증 (주민등록증 또는 운전면허증)',
+      '매매계약서 원본',
+    ],
+    notice: '',
+    updatedAt: new Date().toISOString().split('T')[0],
+  };
+
+  const giftDonorDoc = getDocument('gift', 'donor') || {
+    id: 'gift_donor',
+    registrationType: 'gift',
+    partyType: 'donor',
+    documents: [
+      '등기권리증 (또는 등기필증)',
+      '인감증명서 (부동산 처분용, 발급 3개월 이내)',
+      '주민등록초본 (발급 3개월 이내)',
+      '인감도장',
+      '신분증',
+    ],
+    notice: '',
+    updatedAt: new Date().toISOString().split('T')[0],
+  };
+
+  const giftReceiverDoc = getDocument('gift', 'receiver') || {
+    id: 'gift_receiver',
+    registrationType: 'gift',
+    partyType: 'receiver',
+    documents: [
+      '주민등록초본 (발급 3개월 이내)',
+      '가족관계증명서 (증여자와의 관계 확인용)',
+      '도장',
+      '신분증',
+      '증여계약서',
+    ],
+    notice: '',
+    updatedAt: new Date().toISOString().split('T')[0],
+  };
+
+  const inheritanceDoc = getDocument('inheritance', null) || {
+    id: 'inheritance',
+    registrationType: 'inheritance',
+    partyType: null,
+    documents: [
+      '피상속인 제적등본 (사망 확인용)',
+      '상속인 전원의 가족관계증명서',
+      '상속인 전원의 주민등록초본',
+      '상속인 전원의 인감증명서 및 인감도장',
+      '유산분할협의서 (상속인이 여럿인 경우)',
+      '등기권리증',
+    ],
+    notice: '',
+    updatedAt: new Date().toISOString().split('T')[0],
   };
 
   return (
@@ -92,13 +175,22 @@ export function RegistrationDocuments() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {documentsByType.sale.seller.map((doc, idx) => (
+                  {saleSellerDoc.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-rose-600 flex-shrink-0 mt-0.5" />
                       <span className="text-[#475569]">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {saleSellerDoc.notice && (
+                  <div className="mt-4 pt-4 border-t border-rose-200">
+                    <div className="flex items-start gap-2 text-sm text-rose-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{saleSellerDoc.notice}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -117,13 +209,22 @@ export function RegistrationDocuments() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {documentsByType.sale.buyer.map((doc, idx) => (
+                  {saleBuyerDoc.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-[#2563EB] flex-shrink-0 mt-0.5" />
                       <span className="text-[#475569]">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {saleBuyerDoc.notice && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="flex items-start gap-2 text-sm text-blue-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{saleBuyerDoc.notice}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -146,13 +247,22 @@ export function RegistrationDocuments() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {documentsByType.gift.donor.map((doc, idx) => (
+                  {giftDonorDoc.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-[#4F46E5] flex-shrink-0 mt-0.5" />
                       <span className="text-[#475569]">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {giftDonorDoc.notice && (
+                  <div className="mt-4 pt-4 border-t border-indigo-200">
+                    <div className="flex items-start gap-2 text-sm text-indigo-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{giftDonorDoc.notice}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -171,13 +281,22 @@ export function RegistrationDocuments() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {documentsByType.gift.receiver.map((doc, idx) => (
+                  {giftReceiverDoc.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                       <span className="text-[#475569]">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {giftReceiverDoc.notice && (
+                  <div className="mt-4 pt-4 border-t border-emerald-200">
+                    <div className="flex items-start gap-2 text-sm text-emerald-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{giftReceiverDoc.notice}</p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -198,13 +317,22 @@ export function RegistrationDocuments() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
-                {documentsByType.inheritance.documents.map((doc, idx) => (
+                {inheritanceDoc.documents.map((doc, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <CheckCircle2 className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
                     <span className="text-[#475569]">{doc}</span>
                   </li>
                 ))}
               </ul>
+              
+              {inheritanceDoc.notice && (
+                <div className="mt-4 pt-4 border-t border-amber-200">
+                  <div className="flex items-start gap-2 text-sm text-amber-800">
+                    <Info className="size-4 flex-shrink-0 mt-0.5" />
+                    <p className="whitespace-pre-wrap">{inheritanceDoc.notice}</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -237,8 +365,8 @@ export function RegistrationDocuments() {
                   <strong>정확한 서류 확인</strong>
                 </p>
                 <p className="text-sm text-emerald-800">
-                  서류 준비 관련 궁금하신 사항은 담당자에게 문의주세요.
-                  Tel: 010-9209-7693
+                  등기 신청 전 법무사 사무실에 연락하여 서류가 정확한지 확인받으세요.
+                  Tel: 031-365-3410
                 </p>
               </div>
             </div>
