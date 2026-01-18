@@ -416,8 +416,8 @@ export function TaxInfoManager() {
                             <GripVertical className="size-5 text-slate-400" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h5 className="font-semibold text-slate-900 mb-1">{item.title}</h5>
-                            <p className="text-sm text-slate-600">{item.description}</p>
+                            <h5 className="font-semibold text-slate-900 mb-1 whitespace-pre-line">{item.title}</h5>
+                            <p className="text-sm text-slate-600 whitespace-pre-line">{item.description}</p>
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
                             <Button
