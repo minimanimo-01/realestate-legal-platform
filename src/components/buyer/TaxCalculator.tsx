@@ -241,8 +241,8 @@ export function TaxCalculator() {
           <div className="space-y-3">
             {displayRates.map((rate, idx) => (
               <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-700">{rate.title}</span>
-                <span className="text-slate-900">{rate.description}</span>
+                <span className="text-slate-700 whitespace-pre-line">{rate.title}</span>
+                <span className="text-slate-900 whitespace-pre-line">{rate.description}</span>
               </div>
             ))}
           </div>
@@ -264,8 +264,8 @@ export function TaxCalculator() {
           <div className="grid md:grid-cols-2 gap-4">
             {displayReductions.map((reduction, idx) => (
               <div key={idx} className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <h4 className="text-emerald-900 mb-2">{reduction.title}</h4>
-                <p className="text-sm text-emerald-800">{reduction.description}</p>
+                <h4 className="text-emerald-900 mb-2 whitespace-pre-line">{reduction.title}</h4>
+                <p className="text-sm text-emerald-800 whitespace-pre-line">{reduction.description}</p>
               </div>
             ))}
           </div>
