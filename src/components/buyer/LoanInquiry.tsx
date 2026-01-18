@@ -1,42 +1,123 @@
-import { useState } from 'react';
-import { Phone, FileText, CheckCircle2, AlertCircle, Briefcase, User, Laptop } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Phone, FileText, CheckCircle2, AlertCircle, Briefcase, User, Laptop, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
+
+interface DocumentRequirement {
+  id: string;
+  jobType: string;
+  documents: string[];
+  notice: string;
+  updatedAt: string;
+}
 
 export function LoanInquiry() {
   const [selectedJobType, setSelectedJobType] = useState<'employee' | 'business' | 'freelancer'>('employee');
+  const [loading, setLoading] = useState(true);
+  const [requirements, setRequirements] = useState<DocumentRequirement[]>([
+    {
+      id: 'employee',
+      jobType: 'employee',
+      documents: [
+        '재직증명서',
+        '소득금액증명원 (최근 1년)',
+        '원천징수영수증',
+        '주민등록등본',
+        '건강보험자격득실확인서',
+      ],
+      notice: '',
+      updatedAt: new Date().toISOString().split('T')[0],
+    },
+    {
+      id: 'business',
+      jobType: 'business',
+      documents: [
+        '사업자등록증',
+        '소득금액증명원 (최근 2년)',
+        '부가가치세 과세표준증명원',
+        '주민등록등본',
+        '재무제표 (법인의 경우)',
+      ],
+      notice: '',
+      updatedAt: new Date().toISOString().split('T')[0],
+    },
+    {
+      id: 'freelancer',
+      jobType: 'freelancer',
+      documents: [
+        '소득금액증명원 (최근 2년)',
+        '프리랜서 계약서',
+        '거래내역서 (통장 사본)',
+        '주민등록등본',
+        '건강보험자격득실확인서',
+      ],
+      notice: '',
+      updatedAt: new Date().toISOString().split('T')[0],
+    },
+    {
+      id: 'reference',
+      jobType: 'reference',
+      documents: [
+        '등기부등본',
+        '건축물대장',
+        '매매계약서',
+        '신분증 사본',
+      ],
+      notice: '',
+      updatedAt: new Date().toISOString().split('T')[0],
+    },
+  ]);
 
-  const documentsByJobType = {
-    employee: [
-      '재직증명서',
-      '소득금액증명원 (최근 1년)',
-      '원천징수영수증',
-      '주민등록등본',
-      '건강보험자격득실확인서',
-    ],
-    business: [
-      '사업자등록증',
-      '소득금액증명원 (최근 2년)',
-      '부가가치세 과세표준증명원',
-      '주민등록등본',
-      '재무제표 (법인의 경우)',
-    ],
-    freelancer: [
-      '소득금액증명원 (최근 2년)',
-      '프리랜서 계약서',
-      '거래내역서 (통장 사본)',
-      '주민등록등본',
-      '건강보험자격득실확인서',
-    ],
+  // Load requirements from database
+  useEffect(() => {
+    loadRequirements();
+  }, []);
+
+  const loadRequirements = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0fddf210/loan-document-requirements`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.success && data.requirements && data.requirements.length > 0) {
+          setRequirements(data.requirements);
+        }
+      }
+    } catch (error) {
+      console.error('서류 목록 불러오기 오류:', error);
+      // Keep default values on error
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const referenceDocuments = [
-    '등기부등본',
-    '건축물대장',
-    '매매계약서',
-    '신분증 사본',
-  ];
+  const getRequirement = (jobType: string) => {
+    return requirements.find(r => r.jobType === jobType) || {
+      id: jobType,
+      jobType,
+      documents: [],
+      notice: '',
+      updatedAt: new Date().toISOString().split('T')[0],
+    };
+  };
+
+  const employeeReq = getRequirement('employee');
+  const businessReq = getRequirement('business');
+  const freelancerReq = getRequirement('freelancer');
+  const referenceReq = getRequirement('reference');
 
   return (
     <div className="space-y-6">
@@ -143,13 +224,22 @@ export function LoanInquiry() {
                   직장인 필요 서류
                 </h4>
                 <ul className="space-y-2">
-                  {documentsByJobType.employee.map((doc, idx) => (
+                  {employeeReq.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-blue-600 flex-shrink-0 mt-0.5" />
                       <span className="text-slate-700">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {employeeReq.notice && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <div className="flex items-start gap-2 text-sm text-blue-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{employeeReq.notice}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -160,13 +250,22 @@ export function LoanInquiry() {
                   개인사업자 필요 서류
                 </h4>
                 <ul className="space-y-2">
-                  {documentsByJobType.business.map((doc, idx) => (
+                  {businessReq.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-indigo-600 flex-shrink-0 mt-0.5" />
                       <span className="text-slate-700">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {businessReq.notice && (
+                  <div className="mt-4 pt-4 border-t border-indigo-200">
+                    <div className="flex items-start gap-2 text-sm text-indigo-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{businessReq.notice}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -177,13 +276,22 @@ export function LoanInquiry() {
                   프리랜서 필요 서류
                 </h4>
                 <ul className="space-y-2">
-                  {documentsByJobType.freelancer.map((doc, idx) => (
+                  {freelancerReq.documents.map((doc, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle2 className="size-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                       <span className="text-slate-700">{doc}</span>
                     </li>
                   ))}
                 </ul>
+                
+                {freelancerReq.notice && (
+                  <div className="mt-4 pt-4 border-t border-emerald-200">
+                    <div className="flex items-start gap-2 text-sm text-emerald-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{freelancerReq.notice}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -203,13 +311,22 @@ export function LoanInquiry() {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-3">
-            {referenceDocuments.map((doc, idx) => (
+            {referenceReq.documents.map((doc, idx) => (
               <div key={idx} className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
                 <CheckCircle2 className="size-5 text-slate-600 flex-shrink-0" />
                 <span className="text-slate-700">{doc}</span>
               </div>
             ))}
           </div>
+          
+          {referenceReq.notice && (
+            <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="flex items-start gap-2 text-sm text-slate-700">
+                <Info className="size-4 flex-shrink-0 mt-0.5 text-slate-600" />
+                <p className="whitespace-pre-wrap">{referenceReq.notice}</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -227,7 +344,7 @@ export function LoanInquiry() {
 
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <p className="text-sm text-blue-900">
-                💡 <strong>FAX 번호:</strong> 0303-3130-9709
+                💡 <strong>FAX 번호:</strong> 031-365-3411
               </p>
               <p className="text-sm text-blue-800 mt-2">
                 대출 상담 관련 궁금한 점은 편하게 문의주세요.
