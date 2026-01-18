@@ -98,7 +98,7 @@ export function AdminDashboard({
             </TabsTrigger>
             <TabsTrigger value="content" className="gap-2 data-[state=active]:bg-[#1A2B4B] data-[state=active]:text-white">
               <FileText className="size-4" />
-              <span className="hidden sm:inline">콘텐츠 관리</span>
+              <span className="hidden sm:inline">부동산 콘텐츠 관리</span>
               <span className="sm:hidden">콘텐츠</span>
             </TabsTrigger>
             <TabsTrigger value="customer-content" className="gap-2 data-[state=active]:bg-[#1A2B4B] data-[state=active]:text-white">
