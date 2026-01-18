@@ -2,6 +2,7 @@ import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import * as kv from "./kv_store.tsx";
 
 const app = new Hono();
 
@@ -919,6 +920,221 @@ app.get("/make-server-0fddf210/download-proxy", async (c) => {
     });
   } catch (error) {
     console.error("Error in download proxy:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// ========== KEY-VALUE STORE ENDPOINTS ==========
+
+// Get multiple values by keys
+app.post("/make-server-0fddf210/kv/mget", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { keys } = body;
+
+    if (!keys || !Array.isArray(keys)) {
+      return c.json({ success: false, error: "Missing or invalid keys array" }, 400);
+    }
+
+    const values = await kv.mget(keys);
+    return c.json(values);
+  } catch (error) {
+    console.error("Error in kv/mget:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Set multiple key-value pairs
+app.post("/make-server-0fddf210/kv/mset", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { entries } = body;
+
+    if (!entries || !Array.isArray(entries)) {
+      return c.json({ success: false, error: "Missing or invalid entries array" }, 400);
+    }
+
+    const keys = entries.map((e: any) => e.key);
+    const values = entries.map((e: any) => e.value);
+
+    await kv.mset(keys, values);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("Error in kv/mset:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Get single value by key
+app.get("/make-server-0fddf210/kv/:key", async (c) => {
+  try {
+    const key = c.req.param("key");
+    const value = await kv.get(key);
+    return c.json({ success: true, value });
+  } catch (error) {
+    console.error("Error in kv/get:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Set single key-value pair
+app.post("/make-server-0fddf210/kv/:key", async (c) => {
+  try {
+    const key = c.req.param("key");
+    const body = await c.req.json();
+    const { value } = body;
+
+    await kv.set(key, value);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("Error in kv/set:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// ========== LOAN DOCUMENT REQUIREMENTS ENDPOINTS ==========
+
+// Get all loan document requirements
+app.get("/make-server-0fddf210/loan-document-requirements", async (c) => {
+  try {
+    const { data, error } = await supabase
+      .from('loan_document_requirements')
+      .select('*')
+      .order('job_type', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching loan document requirements:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    // Transform to frontend format
+    const requirements = data.map(req => ({
+      id: req.id,
+      jobType: req.job_type,
+      documents: req.documents || [],
+      notice: req.notice || '',
+      updatedAt: req.updated_at ? new Date(req.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    }));
+
+    return c.json({ success: true, requirements });
+  } catch (error) {
+    console.error("Error fetching loan document requirements:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Update loan document requirement
+app.put("/make-server-0fddf210/loan-document-requirements/:id", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const body = await c.req.json();
+    const { documents, notice } = body;
+
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (documents !== undefined) updateData.documents = documents;
+    if (notice !== undefined) updateData.notice = notice;
+
+    const { data, error } = await supabase
+      .from('loan_document_requirements')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating loan document requirement:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    const requirement = {
+      id: data.id,
+      jobType: data.job_type,
+      documents: data.documents || [],
+      notice: data.notice || '',
+      updatedAt: new Date(data.updated_at).toISOString().split('T')[0],
+    };
+
+    return c.json({ success: true, requirement });
+  } catch (error) {
+    console.error("Error updating loan document requirement:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// ========== REGISTRATION DOCUMENTS ENDPOINTS ==========
+
+// Get all registration documents
+app.get("/make-server-0fddf210/registration-documents", async (c) => {
+  try {
+    const { data, error } = await supabase
+      .from('registration_documents')
+      .select('*')
+      .order('registration_type', { ascending: true })
+      .order('party_type', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching registration documents:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    // Transform to frontend format
+    const documents = data.map(doc => ({
+      id: doc.id,
+      registrationType: doc.registration_type,
+      partyType: doc.party_type || null,
+      documents: doc.documents || [],
+      notice: doc.notice || '',
+      updatedAt: doc.updated_at ? new Date(doc.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    }));
+
+    return c.json({ success: true, documents });
+  } catch (error) {
+    console.error("Error fetching registration documents:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Update registration document
+app.put("/make-server-0fddf210/registration-documents/:id", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const body = await c.req.json();
+    const { documents, notice } = body;
+
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (documents !== undefined) updateData.documents = documents;
+    if (notice !== undefined) updateData.notice = notice;
+
+    const { data, error } = await supabase
+      .from('registration_documents')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating registration document:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    const document = {
+      id: data.id,
+      registrationType: data.registration_type,
+      partyType: data.party_type || null,
+      documents: data.documents || [],
+      notice: data.notice || '',
+      updatedAt: new Date(data.updated_at).toISOString().split('T')[0],
+    };
+
+    return c.json({ success: true, document });
+  } catch (error) {
+    console.error("Error updating registration document:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
