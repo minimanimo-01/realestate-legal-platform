@@ -1139,4 +1139,151 @@ app.put("/make-server-0fddf210/registration-documents/:id", async (c) => {
   }
 });
 
+// ========== TAX INFO ENDPOINTS ==========
+
+// Get all tax info
+app.get("/make-server-0fddf210/tax-info", async (c) => {
+  try {
+    const { data, error } = await supabase
+      .from('tax_info')
+      .select('*')
+      .order('type', { ascending: true })
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching tax info:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    // Transform to frontend format
+    const taxInfo = data.map(info => ({
+      id: info.id,
+      type: info.type,
+      title: info.title,
+      description: info.description,
+      displayOrder: info.display_order,
+      updatedAt: info.updated_at ? new Date(info.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    }));
+
+    return c.json({ success: true, taxInfo });
+  } catch (error) {
+    console.error("Error fetching tax info:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Create new tax info
+app.post("/make-server-0fddf210/tax-info", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { type, title, description } = body;
+
+    // Get the max display_order for this type
+    const { data: maxData } = await supabase
+      .from('tax_info')
+      .select('display_order')
+      .eq('type', type)
+      .order('display_order', { ascending: false })
+      .limit(1);
+
+    const maxOrder = maxData && maxData.length > 0 ? maxData[0].display_order : -1;
+    const newOrder = maxOrder + 1;
+
+    const { data, error } = await supabase
+      .from('tax_info')
+      .insert({
+        type,
+        title,
+        description,
+        display_order: newOrder,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating tax info:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    const taxInfo = {
+      id: data.id,
+      type: data.type,
+      title: data.title,
+      description: data.description,
+      displayOrder: data.display_order,
+      updatedAt: new Date(data.updated_at).toISOString().split('T')[0],
+    };
+
+    return c.json({ success: true, taxInfo });
+  } catch (error) {
+    console.error("Error creating tax info:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Update tax info
+app.put("/make-server-0fddf210/tax-info/:id", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const body = await c.req.json();
+    const { title, description } = body;
+
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+
+    const { data, error } = await supabase
+      .from('tax_info')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating tax info:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    const taxInfo = {
+      id: data.id,
+      type: data.type,
+      title: data.title,
+      description: data.description,
+      displayOrder: data.display_order,
+      updatedAt: new Date(data.updated_at).toISOString().split('T')[0],
+    };
+
+    return c.json({ success: true, taxInfo });
+  } catch (error) {
+    console.error("Error updating tax info:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
+// Delete tax info
+app.delete("/make-server-0fddf210/tax-info/:id", async (c) => {
+  try {
+    const id = c.req.param("id");
+
+    const { error } = await supabase
+      .from('tax_info')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting tax info:", error);
+      return c.json({ success: false, error: error.message }, 500);
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting tax info:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 Deno.serve(app.fetch);
