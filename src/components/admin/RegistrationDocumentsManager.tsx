@@ -24,6 +24,7 @@ export function RegistrationDocumentsManager() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('sale');
   const [activeParty, setActiveParty] = useState<string>('seller');
+  const [inheritanceSubTab, setInheritanceSubTab] = useState<string>('heir');
   const [newDocument, setNewDocument] = useState('');
 
   // Load documents from database
@@ -51,10 +52,15 @@ export function RegistrationDocumentsManager() {
 
       const data = await response.json();
       
+      console.log('📦 DB에서 불러온 데이터:', data);
+      
       if (data.success && data.documents) {
+        console.log('✅ 문서 목록:', data.documents);
+        console.log('📋 상속 문서:', data.documents.filter((d: any) => d.registrationType === 'inheritance'));
         setDocuments(data.documents);
       } else {
         // Set default data if no data exists
+        console.log('⚠️ DB에 데이터 없음 - 기본값 설정');
         setDocuments([
           {
             id: 'sale_seller',
@@ -112,9 +118,9 @@ export function RegistrationDocumentsManager() {
             updatedAt: new Date().toISOString().split('T')[0],
           },
           {
-            id: 'inheritance',
+            id: 'inheritance_heir',
             registrationType: 'inheritance',
-            partyType: null,
+            partyType: 'heir',
             documents: [
               '피상속인 제적등본 (사망 확인용)',
               '상속인 전원의 가족관계증명서',
@@ -123,6 +129,14 @@ export function RegistrationDocumentsManager() {
               '유산분할협의서 (상속인이 여럿인 경우)',
               '등기권리증',
             ],
+            notice: '',
+            updatedAt: new Date().toISOString().split('T')[0],
+          },
+          {
+            id: 'inheritance_deceased',
+            registrationType: 'inheritance',
+            partyType: 'deceased',
+            documents: [],
             notice: '',
             updatedAt: new Date().toISOString().split('T')[0],
           },
@@ -245,17 +259,22 @@ export function RegistrationDocumentsManager() {
 
   const getCurrentDocumentId = () => {
     if (activeTab === 'inheritance') {
-      return 'inheritance';
+      return `inheritance_${inheritanceSubTab}`;
     }
     return `${activeTab}_${activeParty}`;
   };
 
   const getCurrentDocument = () => {
     const currentId = getCurrentDocumentId();
-    return documents.find(d => d.id === currentId) || {
+    console.log('🔍 찾는 문서 ID:', currentId);
+    console.log('📚 전체 문서 목록:', documents);
+    const found = documents.find(d => d.id === currentId);
+    console.log('✨ 찾은 문서:', found);
+    
+    return found || {
       id: currentId,
       registrationType: activeTab,
-      partyType: activeTab === 'inheritance' ? null : activeParty,
+      partyType: activeTab === 'inheritance' ? inheritanceSubTab : activeParty,
       documents: [],
       notice: '',
       updatedAt: new Date().toISOString().split('T')[0],
@@ -380,11 +399,34 @@ export function RegistrationDocumentsManager() {
                 </div>
               )}
 
+              {/* Sub-tab Selection for Inheritance */}
+              {activeTab === 'inheritance' && (
+                <div className="flex gap-2">
+                  <Button
+                    variant={inheritanceSubTab === 'heir' ? 'default' : 'outline'}
+                    onClick={() => setInheritanceSubTab('heir')}
+                    className={inheritanceSubTab === 'heir' ? 'bg-[#1A2B4B]' : ''}
+                  >
+                    상속인
+                  </Button>
+                  <Button
+                    variant={inheritanceSubTab === 'deceased' ? 'default' : 'outline'}
+                    onClick={() => setInheritanceSubTab('deceased')}
+                    className={inheritanceSubTab === 'deceased' ? 'bg-[#1A2B4B]' : ''}
+                  >
+                    망자
+                  </Button>
+                </div>
+              )}
+
               {/* Current Status */}
               <div className="p-4 rounded-lg border bg-blue-50 border-blue-200">
                 <h4 className="flex items-center gap-2 mb-2 text-blue-900">
                   <Icon className="size-5" />
-                  {config.label} {config.parties ? `- ${config.parties.find(p => p.value === activeParty)?.label}` : ''} 필요 서류
+                  {config.label} 
+                  {config.parties ? `- ${config.parties.find(p => p.value === activeParty)?.label}` : ''} 
+                  {activeTab === 'inheritance' ? `- ${inheritanceSubTab === 'heir' ? '상속인' : '망자'}` : ''}
+                  {' '}필요 서류
                 </h4>
                 <p className="text-sm text-blue-800">
                   현재 {currentDoc.documents.length}개의 서류가 등록되어 있습니다
