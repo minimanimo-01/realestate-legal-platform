@@ -115,10 +115,10 @@ export function RegistrationDocuments() {
     updatedAt: new Date().toISOString().split('T')[0],
   };
 
-  const inheritanceDoc = getDocument('inheritance', null) || {
-    id: 'inheritance',
+  const inheritanceHeirDoc = getDocument('inheritance', 'heir') || {
+    id: 'inheritance_heir',
     registrationType: 'inheritance',
-    partyType: null,
+    partyType: 'heir',
     documents: [
       '피상속인 제적등본 (사망 확인용)',
       '상속인 전원의 가족관계증명서',
@@ -127,6 +127,15 @@ export function RegistrationDocuments() {
       '유산분할협의서 (상속인이 여럿인 경우)',
       '등기권리증',
     ],
+    notice: '',
+    updatedAt: new Date().toISOString().split('T')[0],
+  };
+
+  const inheritanceDeceasedDoc = getDocument('inheritance', 'deceased') || {
+    id: 'inheritance_deceased',
+    registrationType: 'inheritance',
+    partyType: 'deceased',
+    documents: [],
     notice: '',
     updatedAt: new Date().toISOString().split('T')[0],
   };
@@ -303,38 +312,83 @@ export function RegistrationDocuments() {
         </TabsContent>
 
         <TabsContent value="inheritance" className="space-y-4">
-          <Card className="border-2 border-amber-200 bg-amber-50/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-[#1A2B4B]">
-                <div className="size-8 rounded-full bg-amber-100 flex items-center justify-center">
-                  <FileCheck className="size-4 text-amber-600" />
-                </div>
-                상속 등기 필요 서류
-              </CardTitle>
-              <CardDescription className="text-[#64748B]">
-                상속 등기 시 준비해야 할 서류
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {inheritanceDoc.documents.map((doc, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <CheckCircle2 className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <span className="text-[#475569]">{doc}</span>
-                  </li>
-                ))}
-              </ul>
-              
-              {inheritanceDoc.notice && (
-                <div className="mt-4 pt-4 border-t border-amber-200">
-                  <div className="flex items-start gap-2 text-sm text-amber-800">
-                    <Info className="size-4 flex-shrink-0 mt-0.5" />
-                    <p className="whitespace-pre-wrap">{inheritanceDoc.notice}</p>
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Heir Documents */}
+            <Card className="border-2 border-amber-200 bg-amber-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-[#1A2B4B]">
+                  <div className="size-8 rounded-full bg-amber-100 flex items-center justify-center">
+                    <FileCheck className="size-4 text-amber-600" />
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  상속인 준비 서류
+                </CardTitle>
+                <CardDescription className="text-[#64748B]">
+                  상속받는 사람이 준비해야 할 서류
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {inheritanceHeirDoc.documents.length > 0 ? (
+                  <ul className="space-y-3">
+                    {inheritanceHeirDoc.documents.map((doc, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle2 className="size-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-[#475569]">{doc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-[#64748B] py-4">등록된 서류가 없습니다.</p>
+                )}
+                
+                {inheritanceHeirDoc.notice && (
+                  <div className="mt-4 pt-4 border-t border-amber-200">
+                    <div className="flex items-start gap-2 text-sm text-amber-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{inheritanceHeirDoc.notice}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Deceased Documents */}
+            <Card className="border-2 border-slate-200 bg-slate-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-[#1A2B4B]">
+                  <div className="size-8 rounded-full bg-slate-100 flex items-center justify-center">
+                    <FileCheck className="size-4 text-slate-600" />
+                  </div>
+                  망자 관련 서류
+                </CardTitle>
+                <CardDescription className="text-[#64748B]">
+                  고인 관련 준비해야 할 서류
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {inheritanceDeceasedDoc.documents.length > 0 ? (
+                  <ul className="space-y-3">
+                    {inheritanceDeceasedDoc.documents.map((doc, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle2 className="size-5 text-slate-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-[#475569]">{doc}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-[#64748B] py-4">등록된 서류가 없습니다.</p>
+                )}
+                
+                {inheritanceDeceasedDoc.notice && (
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <div className="flex items-start gap-2 text-sm text-slate-800">
+                      <Info className="size-4 flex-shrink-0 mt-0.5" />
+                      <p className="whitespace-pre-wrap">{inheritanceDeceasedDoc.notice}</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
