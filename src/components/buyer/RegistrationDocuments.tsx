@@ -419,8 +419,8 @@ export function RegistrationDocuments() {
                   <strong>정확한 서류 확인</strong>
                 </p>
                 <p className="text-sm text-emerald-800">
-                  등기 신청 전 법무사 사무실에 연락하여 서류가 정확한지 확인받으세요.
-                  Tel: 031-365-3410
+                  등기 신청 전 법무사 사무실에 연락하여 서류가 정확한지 확인 받으세요.
+                  Tel: 010-9209-7693
                 </p>
               </div>
             </div>
